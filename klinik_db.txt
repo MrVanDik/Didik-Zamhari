@@ -1,0 +1,205 @@
+--wilayah 
+
+CREATE TABLE `wilayah` (
+  `id_wilayah` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_wilayah` varchar(100) NOT NULL,
+  `tipe` enum('provinsi','kabupaten','kota','kecamatan') NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_wilayah`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+
+--- klinik_db.users definition
+
+CREATE TABLE `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_role` bigint(20) unsigned NOT NULL DEFAULT 1,
+  `id_pegawai` int(11) DEFAULT NULL,
+  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- klinik_db.transaksi_tindakan definition
+
+CREATE TABLE `transaksi_tindakan` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id_transaksi` int(10) unsigned NOT NULL,
+  `id_tindakan` int(11) NOT NULL,
+  `biaya` decimal(10,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_transaksi` (`id_transaksi`),
+  KEY `idx_tindakan` (`id_tindakan`),
+  CONSTRAINT `fk_tt_tindakan` FOREIGN KEY (`id_tindakan`) REFERENCES `tindakan` (`id_tindakan`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_tt_transaksi` FOREIGN KEY (`id_transaksi`) REFERENCES `transaksi` (`id_transaksi`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- klinik_db.transaksi definition
+
+CREATE TABLE `transaksi` (
+  `id_transaksi` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id_daftar` int(11) NOT NULL,
+  `id_pegawai` int(11) NOT NULL,
+  `diagnosa` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `total_biaya` decimal(12,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_transaksi`),
+  KEY `idx_pendaftaran` (`id_daftar`),
+  KEY `idx_pegawai` (`id_pegawai`),
+  CONSTRAINT `fk_transaksi_pegawai` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id_pegawai`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_transaksi_pendaftaran` FOREIGN KEY (`id_daftar`) REFERENCES `pendaftaran` (`id_daftar`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- klinik_db.tindakan_obat definition
+
+CREATE TABLE `tindakan_obat` (
+  `id_tindakan_obat` int(11) NOT NULL AUTO_INCREMENT,
+  `id_transaksi` int(11) NOT NULL,
+  `id_obat` int(11) NOT NULL,
+  `jumlah` int(11) NOT NULL,
+  `subtotal` decimal(12,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_tindakan_obat`),
+  KEY `fk_tindakan_obat_obat` (`id_obat`),
+  KEY `fk_tindakan_obat_transaksi` (`id_transaksi`),
+  CONSTRAINT `fk_tindakan_obat_obat` FOREIGN KEY (`id_obat`) REFERENCES `obat` (`id_obat`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+
+-- klinik_db.tindakan definition
+
+CREATE TABLE `tindakan` (
+  `id_tindakan` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_tindakan` varchar(100) NOT NULL,
+  `biaya_tindakan` decimal(12,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_tindakan`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+
+
+-- klinik_db.`role` definition
+
+CREATE TABLE `role` (
+  `id_role` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_role` varchar(50) NOT NULL,
+  PRIMARY KEY (`id_role`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+
+
+-- klinik_db.pendaftaran definition
+
+CREATE TABLE `pendaftaran` (
+  `id_daftar` int(11) NOT NULL AUTO_INCREMENT,
+  `id_pasien` bigint(20) unsigned NOT NULL,
+  `no_reg` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tgl_daftar` datetime NOT NULL,
+  `jenis_kunjungan` enum('baru','lama') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('antri','proses','selesai') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'antri',
+  `keluhan` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `diagnosa` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_daftar`),
+  UNIQUE KEY `no_reg_unique` (`no_reg`),
+  KEY `pendaftaran_ibfk_1` (`id_pasien`),
+  CONSTRAINT `pendaftaran_ibfk_1` FOREIGN KEY (`id_pasien`) REFERENCES `pasien` (`id_pasien`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- klinik_db.pembayaran definition
+
+CREATE TABLE `pembayaran` (
+  `id_pembayaran` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_transaksi` int(10) unsigned NOT NULL,
+  `id_pegawai` int(11) NOT NULL,
+  `total_tagihan` decimal(12,2) NOT NULL,
+  `jumlah_bayar` decimal(12,2) NOT NULL,
+  `kembalian` decimal(12,2) NOT NULL,
+  `status_pembayaran` enum('pending','lunas','batal') NOT NULL DEFAULT 'pending',
+  `metode_pembayaran` enum('tunai','transfer','debit','kredit') NOT NULL DEFAULT 'tunai',
+  `no_referensi` varchar(100) DEFAULT NULL,
+  `keterangan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_pembayaran`),
+  KEY `pembayaran_id_transaksi_foreign` (`id_transaksi`),
+  KEY `pembayaran_id_pegawai_foreign` (`id_pegawai`),
+  CONSTRAINT `pembayaran_id_pegawai_foreign` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id_pegawai`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `pembayaran_id_transaksi_foreign` FOREIGN KEY (`id_transaksi`) REFERENCES `transaksi` (`id_transaksi`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+
+
+-- klinik_db.pegawai definition
+
+CREATE TABLE `pegawai` (
+  `id_pegawai` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_pegawai` varchar(100) NOT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `jabatan` varchar(50) DEFAULT NULL,
+  `no_telp` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_pegawai`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+
+
+-- klinik_db.pasien definition
+
+CREATE TABLE `pasien` (
+  `id_pasien` bigint(20) unsigned NOT NULL,
+  `nama_pasien` varchar(100) NOT NULL,
+  `tgl_lahir` date DEFAULT NULL,
+  `jk` enum('L','P') NOT NULL,
+  `alamat` text DEFAULT NULL,
+  `id_wilayah` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_pasien`),
+  KEY `id_wilayah` (`id_wilayah`),
+  CONSTRAINT `pasien_ibfk_1` FOREIGN KEY (`id_wilayah`) REFERENCES `wilayah` (`id_wilayah`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- klinik_db.obat definition
+
+CREATE TABLE `obat` (
+  `id_obat` int(11) NOT NULL AUTO_INCREMENT,
+  `kode_obat` varchar(10) DEFAULT NULL,
+  `nama_obat` varchar(100) NOT NULL,
+  `jenis_obat` varchar(50) DEFAULT NULL,
+  `harga_obat` decimal(10,2) NOT NULL,
+  `expired_date` date DEFAULT NULL,
+  `keterangan` text DEFAULT NULL,
+  `stok` int(11) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_obat`),
+  UNIQUE KEY `kode_obat` (`kode_obat`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+
+
+INSERT INTO klinik_db.users
+(id, name, email, email_verified_at, password, id_role, id_pegawai, remember_token, created_at, updated_at)
+VALUES(2, 'Dr.Andri Setiawan', 'andri@gmail.com', NULL, '$2y$10$JsEgk1HMitAdSNS/L7S4bubviKaZ0Bb65WHFTfOPl/Ue/jSzrQsj6', 1, 2, NULL, '2025-08-18 18:26:40', '2025-08-19 17:38:29');
+INSERT INTO klinik_db.users
+(id, name, email, email_verified_at, password, id_role, id_pegawai, remember_token, created_at, updated_at)
+VALUES(3, 'Agus', 'agus@gmail.com', NULL, '$2y$10$xMrJ5.RRSi2xoGzJpQvFKexHA4BhYp/UH/U8/B45iquxKeOs.ihtC', 2, 3, NULL, '2025-08-18 18:40:10', '2025-08-18 18:40:10');
+INSERT INTO klinik_db.users
+(id, name, email, email_verified_at, password, id_role, id_pegawai, remember_token, created_at, updated_at)
+VALUES(4, 'Arif', 'arif@gmail.com', NULL, '$2y$10$nO43vDnuvoMvWJgXIX4x6uPREYBdF3KOfPjm7KrVFA/5Q1a/e9wKe', 4, 4, NULL, '2025-08-20 06:04:19', '2025-08-20 06:04:19');
+
+
+catatan :
+Password user : password123
